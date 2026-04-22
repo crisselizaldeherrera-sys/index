@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Llaves</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Registro de Llaves</h2>
+        <input type="text" id="nombre" placeholder="Nombre completo">
+        <input type="text" id="contrato" placeholder="Número de contrato">
+        <select id="equipo">
+            <option value="">-- Seleccionar Equipo --</option>
+            <option value="Sprinter 01">Sprinter 01</option>
+            <option value="Sprinter 02">Sprinter 02</option>
+            <option value="Taxi Bus A1">Taxi Bus A1</option>
+        </select>
+        <select id="motivo">
+            <option value="Prueba de ruta">Prueba de ruta</option>
+            <option value="Mantención">Mantención</option>
+            <option value="Lavado">Lavado</option>
+        </select>
+        <button onclick="enviar()">Registrar Salida</button>
+        <p id="status" style="text-align:center;"></p>
+    </div>
+
+    <script>
+        const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbz6AzzSCFpn2POlxoI84qXoYwYo9IoIzQ_AKqszHaP9UNjbea5mMe0WlSKiP_-7hCcM/exec";
+
+        function enviar() {
+            const status = document.getElementById('status');
+            const datos = {
+                nombre: document.getElementById('nombre').value,
+                contrato: document.getElementById('contrato').value,
+                equipo: document.getElementById('equipo').value,
+                motivo: document.getElementById('motivo').value
+            };
+
+            if(!datos.nombre || !datos.equipo) return alert("Completa los datos");
+
+            status.innerText = "Enviando...";
+            fetch(URL_GOOGLE_SCRIPT, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(datos)
+            }).then(() => {
+                status.innerText = "✅ ¡Registrado con éxito!";
+                document.querySelectorAll('input').forEach(i => i.value = '');
+            });
+        }
+    </script>
+</body>
+</html>
