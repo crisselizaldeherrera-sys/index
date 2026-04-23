@@ -3,15 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Control Maestro - Llaves</title>
+    <title>Control Maestro de Llaves</title>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #eef2f3; padding: 20px; color: #333; }
-        .card { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #1a73e8; margin-bottom: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #eef2f3; padding: 15px; color: #333; }
+        .card { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #1a73e8; }
         label { font-weight: bold; font-size: 14px; display: block; margin-top: 15px; }
         input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 25px; transition: 0.3s; }
-        button:hover { background: #1557b0; }
+        
+        /* Estilo especial para que el buscador se vea moderno */
+        .select2-container--default .select2-selection--single {
+            height: 45px; border: 1px solid #ddd; border-radius: 8px; padding-top: 8px;
+        }
+        
+        button { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 25px; }
         button:disabled { background: #ccc; }
         #status { text-align: center; margin-top: 15px; font-weight: bold; }
     </style>
@@ -19,20 +29,20 @@
 <body>
 
 <div class="card">
-    <h2>Registro de Salida</h2>
+    <h2>Registro de Llaves</h2>
     
     <label>Nombre del Colaborador</label>
     <input type="text" id="nombre" placeholder="Nombre completo" required>
 
-    <label>Número de Contrato</label>
+    <label>Contrato</label>
     <input type="text" id="contrato" placeholder="Ej. 5500123" required>
 
-    <label>Seleccionar Equipo / Vehículo</label>
-    <select id="equipo" required>
-        <option value="">-- Busque su equipo --</option>
-        </select>
+    <label>Seleccionar Equipo (Use la lupa para buscar)</label>
+    <select id="equipo" style="width: 100%;">
+        <option value="">Escriba M, B o T para buscar...</option>
+    </select>
 
-    <label>Motivo de la Solicitud</label>
+    <label>Motivo</label>
     <select id="motivo" required>
         <option value="">-- Seleccione Motivo --</option>
         <option value="Carga de combustible">Carga de combustible</option>
@@ -49,12 +59,11 @@
 </div>
 
 <script>
-    // 1. REEMPLAZA ESTA URL CON TU URL DE GOOGLE APPS SCRIPT
     const URL_GOOGLE_SCRIPT = "https://crisselizaldeherrera-sys.github.io/index/";
 
-    // 2. FUNCIÓN PARA GENERAR LAS 9,000 OPCIONES AUTOMÁTICAMENTE
-    function cargarEquipos() {
-        const selectEquipo = document.getElementById('equipo');
+    // Generar 9,000 equipos y activar buscador
+    $(document).ready(function() {
+        const selectEquipo = $('#equipo');
         const tipos = [
             { prefijo: "M-", nombre: "Sprinter", fin: 3000 },
             { prefijo: "B-", nombre: "Bus", fin: 3000 },
@@ -62,26 +71,23 @@
         ];
 
         tipos.forEach(tipo => {
-            const grupo = document.createElement('optgroup');
-            grupo.label = tipo.nombre;
-            
+            let optgroup = $('<optgroup label="' + tipo.nombre + '">');
             for (let i = 1; i <= tipo.fin; i++) {
-                // Formateamos el número para que sea 01, 02... en lugar de 1, 2
-                let num = i < 10 ? '0' + i : i;
+                let num = i.toString().padStart(2, '0');
                 let valor = tipo.prefijo + num;
-                let opcion = document.createElement('option');
-                opcion.value = valor;
-                opcion.text = valor;
-                grupo.appendChild(opcion);
+                optgroup.append($('<option>', { value: valor, text: valor }));
             }
-            selectEquipo.appendChild(grupo);
+            selectEquipo.append(optgroup);
         });
-    }
 
-    // Ejecutamos la carga de equipos al abrir la página
-    window.onload = cargarEquipos;
+        // ACTIVAR LA LUPA (Select2)
+        selectEquipo.select2({
+            placeholder: "Escriba para filtrar (ej: B-150)",
+            allowClear: true,
+            language: { noResults: () => "No se encontró el equipo" }
+        });
+    });
 
-    // 3. FUNCIÓN PARA ENVIAR LOS DATOS
     function enviar() {
         const btn = document.getElementById('btnEnviar');
         const status = document.getElementById('status');
@@ -89,19 +95,18 @@
         const datos = {
             nombre: document.getElementById('nombre').value,
             contrato: document.getElementById('contrato').value,
-            equipo: document.getElementById('equipo').value,
+            equipo: $('#equipo').val(),
             motivo: document.getElementById('motivo').value
         };
 
         if(!datos.nombre || !datos.contrato || !datos.equipo || !datos.motivo) {
-            alert("Por favor, completa todos los campos.");
+            alert("Por favor, complete todos los campos.");
             return;
         }
 
         btn.disabled = true;
-        status.innerText = "⏳ Enviando registro a la nube...";
-        status.style.color = "orange";
-
+        status.innerText = "⏳ Guardando en la nube...";
+        
         fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
             mode: 'no-cors',
@@ -110,13 +115,12 @@
             status.innerText = "✅ ¡Registro exitoso!";
             status.style.color = "green";
             btn.disabled = false;
-            // Limpiar formulario excepto contrato si es el mismo trabajador
+            // Limpiar
             document.getElementById('nombre').value = '';
-            document.getElementById('equipo').value = '';
+            $('#equipo').val(null).trigger('change');
             document.getElementById('motivo').value = '';
         }).catch(err => {
-            status.innerText = "❌ Error al enviar. Reintente.";
-            status.style.color = "red";
+            status.innerText = "❌ Error. Reintente.";
             btn.disabled = false;
         });
     }
