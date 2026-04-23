@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Maestro de Llaves</title>
+    <title>Control Maestro - Selección Múltiple</title>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -16,9 +16,9 @@
         label { font-weight: bold; font-size: 14px; display: block; margin-top: 15px; }
         input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         
-        /* Estilo especial para que el buscador se vea moderno */
-        .select2-container--default .select2-selection--single {
-            height: 45px; border: 1px solid #ddd; border-radius: 8px; padding-top: 8px;
+        /* Ajuste para selección múltiple */
+        .select2-container--default .select2-selection--multiple {
+            border: 1px solid #ddd; border-radius: 8px; min-height: 45px; padding: 5px;
         }
         
         button { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 25px; }
@@ -37,10 +37,9 @@
     <label>Contrato</label>
     <input type="text" id="contrato" placeholder="Ej. 5500123" required>
 
-    <label>Seleccionar Equipo (Use la lupa para buscar)</label>
-    <select id="equipo" style="width: 100%;">
-        <option value="">Escriba M, B o T para buscar...</option>
-    </select>
+    <label>Seleccionar Equipos (Puede elegir varios)</label>
+    <select id="equipo" style="width: 100%;" multiple="multiple">
+        </select>
 
     <label>Motivo</label>
     <select id="motivo" required>
@@ -59,9 +58,9 @@
 </div>
 
 <script>
+    // REEMPLAZA CON TU URL DE GOOGLE APPS SCRIPT
     const URL_GOOGLE_SCRIPT = "https://crisselizaldeherrera-sys.github.io/index/";
 
-    // Generar 9,000 equipos y activar buscador
     $(document).ready(function() {
         const selectEquipo = $('#equipo');
         const tipos = [
@@ -80,11 +79,10 @@
             selectEquipo.append(optgroup);
         });
 
-        // ACTIVAR LA LUPA (Select2)
+        // ACTIVAR BUSCADOR CON SELECCIÓN MÚLTIPLE
         selectEquipo.select2({
-            placeholder: "Escriba para filtrar (ej: B-150)",
-            allowClear: true,
-            language: { noResults: () => "No se encontró el equipo" }
+            placeholder: "Busque y seleccione los equipos",
+            allowClear: true
         });
     });
 
@@ -92,20 +90,24 @@
         const btn = document.getElementById('btnEnviar');
         const status = document.getElementById('status');
         
+        // Obtenemos los valores seleccionados como un Array y los unimos con comas
+        const equiposSeleccionados = $('#equipo').val();
+        const equiposTexto = equiposSeleccionados ? equiposSeleccionados.join(", ") : "";
+
         const datos = {
             nombre: document.getElementById('nombre').value,
             contrato: document.getElementById('contrato').value,
-            equipo: $('#equipo').val(),
+            equipo: equiposTexto, // Enviamos "M-01, B-45"
             motivo: document.getElementById('motivo').value
         };
 
-        if(!datos.nombre || !datos.contrato || !datos.equipo || !datos.motivo) {
-            alert("Por favor, complete todos los campos.");
+        if(!datos.nombre || !datos.contrato || !equiposTexto || !datos.motivo) {
+            alert("Por favor, completa todos los campos y selecciona al menos un equipo.");
             return;
         }
 
         btn.disabled = true;
-        status.innerText = "⏳ Guardando en la nube...";
+        status.innerText = "⏳ Guardando registros...";
         
         fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
@@ -115,7 +117,8 @@
             status.innerText = "✅ ¡Registro exitoso!";
             status.style.color = "green";
             btn.disabled = false;
-            // Limpiar
+            
+            // Limpiar formulario
             document.getElementById('nombre').value = '';
             $('#equipo').val(null).trigger('change');
             document.getElementById('motivo').value = '';
