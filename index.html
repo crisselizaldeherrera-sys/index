@@ -63,10 +63,13 @@
 
     $(document).ready(function() {
         const selectEquipo = $('#equipo');
-        const tipos = [
+       const tipos = [
             { prefijo: "M-", nombre: "Sprinter", fin: 3000 },
             { prefijo: "B-", nombre: "Bus", fin: 3000 },
-            { prefijo: "T-", nombre: "Taxi Bus", fin: 3000 }
+            { prefijo: "T-", nombre: "Taxi Bus", fin: 3000 },
+            { prefijo: "CA-", nombre: "Camionetas", fin: 1000 },
+            { prefijo: "ME-", nombre: "Sprinter Electricos", fin: 1000 },
+            { prefijo: "BE-", nombre: "Bus Electricos", fin: 1000 }
         ];
 
         tipos.forEach(tipo => {
