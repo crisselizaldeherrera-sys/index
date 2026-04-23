@@ -1,60 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Llaves</title>
+    <title>Sistema de Control Maestro - Llaves</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        body { font-family: 'Segoe UI', sans-serif; background: #eef2f3; padding: 20px; color: #333; }
+        .card { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #1a73e8; margin-bottom: 20px; }
+        label { font-weight: bold; font-size: 14px; display: block; margin-top: 15px; }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 25px; transition: 0.3s; }
+        button:hover { background: #1557b0; }
+        button:disabled { background: #ccc; }
+        #status { text-align: center; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>Registro de Llaves</h2>
-        <input type="text" id="nombre" placeholder="Nombre completo">
-        <input type="text" id="contrato" placeholder="Número de contrato">
-        <select id="equipo">
-            <option value="">-- Seleccionar Equipo --</option>
-            <option value="Sprinter 01">Sprinter 01</option>
-            <option value="Sprinter 02">Sprinter 02</option>
-            <option value="Taxi Bus A1">Taxi Bus A1</option>
+
+<div class="card">
+    <h2>Registro de Salida</h2>
+    
+    <label>Nombre del Colaborador</label>
+    <input type="text" id="nombre" placeholder="Nombre completo" required>
+
+    <label>Número de Contrato</label>
+    <input type="text" id="contrato" placeholder="Ej. 5500123" required>
+
+    <label>Seleccionar Equipo / Vehículo</label>
+    <select id="equipo" required>
+        <option value="">-- Busque su equipo --</option>
         </select>
-        <select id="motivo">
-            <option value="Prueba de ruta">Prueba de ruta</option>
-            <option value="Mantención">Mantención</option>
-            <option value="Lavado">Lavado</option>
-        </select>
-        <button onclick="enviar()">Registrar Salida</button>
-        <p id="status" style="text-align:center;"></p>
-    </div>
 
-    <script>
-        const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbz6AzzSCFpn2POlxoI84qXoYwYo9IoIzQ_AKqszHaP9UNjbea5mMe0WlSKiP_-7hCcM/exec";
+    <label>Motivo de la Solicitud</label>
+    <select id="motivo" required>
+        <option value="">-- Seleccione Motivo --</option>
+        <option value="Carga de combustible">Carga de combustible</option>
+        <option value="Revision tecnica">Revisión técnica</option>
+        <option value="Lavado de chasis">Lavado de chasis</option>
+        <option value="Prueba de ruta">Prueba de ruta</option>
+        <option value="Mantención">Mantención</option>
+        <option value="Lavado">Lavado</option>
+        <option value="Otro">Otro</option>
+    </select>
 
-        function enviar() {
-            const status = document.getElementById('status');
-            const datos = {
-                nombre: document.getElementById('nombre').value,
-                contrato: document.getElementById('contrato').value,
-                equipo: document.getElementById('equipo').value,
-                motivo: document.getElementById('motivo').value
-            };
+    <button id="btnEnviar" onclick="enviar()">Registrar Salida</button>
+    <p id="status"></p>
+</div>
 
-            if(!datos.nombre || !datos.equipo) return alert("Completa los datos");
+<script>
+    // 1. REEMPLAZA ESTA URL CON TU URL DE GOOGLE APPS SCRIPT
+    const URL_GOOGLE_SCRIPT = "https://crisselizaldeherrera-sys.github.io/index/";
 
-            status.innerText = "Enviando...";
-            fetch(URL_GOOGLE_SCRIPT, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify(datos)
-            }).then(() => {
-                status.innerText = "✅ ¡Registrado con éxito!";
-                document.querySelectorAll('input').forEach(i => i.value = '');
-            });
+    // 2. FUNCIÓN PARA GENERAR LAS 9,000 OPCIONES AUTOMÁTICAMENTE
+    function cargarEquipos() {
+        const selectEquipo = document.getElementById('equipo');
+        const tipos = [
+            { prefijo: "M-", nombre: "Sprinter", fin: 3000 },
+            { prefijo: "B-", nombre: "Bus", fin: 3000 },
+            { prefijo: "T-", nombre: "Taxi Bus", fin: 3000 }
+        ];
+
+        tipos.forEach(tipo => {
+            const grupo = document.createElement('optgroup');
+            grupo.label = tipo.nombre;
+            
+            for (let i = 1; i <= tipo.fin; i++) {
+                // Formateamos el número para que sea 01, 02... en lugar de 1, 2
+                let num = i < 10 ? '0' + i : i;
+                let valor = tipo.prefijo + num;
+                let opcion = document.createElement('option');
+                opcion.value = valor;
+                opcion.text = valor;
+                grupo.appendChild(opcion);
+            }
+            selectEquipo.appendChild(grupo);
+        });
+    }
+
+    // Ejecutamos la carga de equipos al abrir la página
+    window.onload = cargarEquipos;
+
+    // 3. FUNCIÓN PARA ENVIAR LOS DATOS
+    function enviar() {
+        const btn = document.getElementById('btnEnviar');
+        const status = document.getElementById('status');
+        
+        const datos = {
+            nombre: document.getElementById('nombre').value,
+            contrato: document.getElementById('contrato').value,
+            equipo: document.getElementById('equipo').value,
+            motivo: document.getElementById('motivo').value
+        };
+
+        if(!datos.nombre || !datos.contrato || !datos.equipo || !datos.motivo) {
+            alert("Por favor, completa todos los campos.");
+            return;
         }
-    </script>
+
+        btn.disabled = true;
+        status.innerText = "⏳ Enviando registro a la nube...";
+        status.style.color = "orange";
+
+        fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify(datos)
+        }).then(() => {
+            status.innerText = "✅ ¡Registro exitoso!";
+            status.style.color = "green";
+            btn.disabled = false;
+            // Limpiar formulario excepto contrato si es el mismo trabajador
+            document.getElementById('nombre').value = '';
+            document.getElementById('equipo').value = '';
+            document.getElementById('motivo').value = '';
+        }).catch(err => {
+            status.innerText = "❌ Error al enviar. Reintente.";
+            status.style.color = "red";
+            btn.disabled = false;
+        });
+    }
+</script>
+
 </body>
 </html>
